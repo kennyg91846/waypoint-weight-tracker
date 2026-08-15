@@ -271,10 +271,11 @@ function updateDayTotalBadge(iso, value) {
 // separate saves. After the write completes it updates the local cache,
 // shows a toast, and refreshes the week averages/deltas and the "Today"
 // hint so the UI reflects the new value immediately.
-async function scheduleSave(dateISO, value) {
+async function scheduleSave(dateISO, value, options = {}) {
+  const { confirmOutlier = false, delayMs = 500 } = options;
   clearTimeout(saveTimers.get(dateISO));
   const t = setTimeout(async () => {
-    if (value !== '' && value !== null && value !== undefined) {
+    if (confirmOutlier && value !== '' && value !== null && value !== undefined) {
       const num = Number(value);
       if (Number.isFinite(num) && shouldConfirmOutlier(dateISO, num)) {
         const prev = findPreviousLoggedWeight(dateISO);
@@ -299,7 +300,7 @@ async function scheduleSave(dateISO, value) {
     updateTodayHint();
     refreshWeekDeltas();
     updateGoalSnapshot();
-  }, 500);
+  }, delayMs);
   saveTimers.set(dateISO, t);
 }
 
@@ -350,12 +351,17 @@ function buildDayRow(date, todayISOStr, isWeekStart = false) {
   if (existing !== undefined) input.value = existing;
 
   input.addEventListener('input', () => {
-    scheduleSave(iso, input.value);
+    // Save while typing without interruption; outlier confirm runs on blur.
+    scheduleSave(iso, input.value, { confirmOutlier: false });
     updateDayTotalBadge(iso, input.value);
     // Keep the "Today" quick-entry input in sync if this row is today's.
     if (iso === todayISOStr) {
       document.getElementById('today-input').value = input.value;
     }
+  });
+
+  input.addEventListener('blur', () => {
+    scheduleSave(iso, input.value, { confirmOutlier: true, delayMs: 0 });
   });
 
   li.append(dateWrap, total, input);
@@ -573,10 +579,15 @@ async function init() {
   const existingToday = entriesCache.get(todayISOStr);
   if (existingToday !== undefined) todayInput.value = existingToday;
   todayInput.addEventListener('input', () => {
-    scheduleSave(todayISOStr, todayInput.value);
+    // Save while typing without interruption; outlier confirm runs on blur.
+    scheduleSave(todayISOStr, todayInput.value, { confirmOutlier: false });
     const rowInput = document.querySelector(`#day-${todayISOStr} input`);
     if (rowInput) rowInput.value = todayInput.value;
     updateDayTotalBadge(todayISOStr, todayInput.value);
+  });
+
+  todayInput.addEventListener('blur', () => {
+    scheduleSave(todayISOStr, todayInput.value, { confirmOutlier: true, delayMs: 0 });
   });
 
   await wireYearSelector(today, todayISOStr);
