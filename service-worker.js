@@ -9,7 +9,7 @@
 // shipping updated assets: the 'activate' handler below deletes any
 // cache whose name doesn't match the current CACHE_NAME, so a version
 // bump forces old cached files to be dropped in favor of fresh ones.
-const CACHE_NAME = 'waypoint-v13';
+const CACHE_NAME = 'waypoint-v20';
 // Every file the app needs to run offline. Keep this in sync with
 // reality — if a new asset (font, icon, script) is added to the app but
 // not listed here, it won't be pre-cached on install and may fail to
