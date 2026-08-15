@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#33604c">
+<title>Waypoint — Trend</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header__top">
+    <div>
+      <h1 class="app-name">Waypoint</h1>
+      <p class="app-tagline">The course you've charted</p>
+    </div>
+    <button type="button" class="install-btn" data-install-app hidden>Install App</button>
+  </div>
+  <svg class="horizon" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true">
+    <polyline points="0,28 30,24 55,30 80,14 110,20 140,8 170,18 200,12 230,24 260,16 290,26 320,10 350,20 380,15 400,22"
+      fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+</header>
+
+<main>
+  <div id="chart-section">
+    <div class="range-tabs" id="range-tabs" role="tablist" aria-label="Weeks shown">
+      <button type="button" data-range="8" aria-pressed="true">8 wks</button>
+      <button type="button" data-range="26" aria-pressed="false">26 wks</button>
+      <button type="button" data-range="all" aria-pressed="false">All</button>
+      <button type="button" id="smooth-toggle" aria-pressed="false">Smoothing</button>
+    </div>
+
+    <section class="card">
+      <div class="chart-wrap">
+        <canvas id="trend-canvas" role="img" aria-label="Line chart of weekly average weight over time"></canvas>
+      </div>
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat__label">Latest week</div>
+          <div class="stat__value" id="stat-latest">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Vs. prior wk</div>
+          <div class="stat__value" id="stat-change">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Avg (shown)</div>
+          <div class="stat__value" id="stat-avg">—</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:14px;">
+      <p class="section-label">Weekly log (Sun–Sat)</p>
+      <ul class="weekly-list" id="weekly-list"></ul>
+    </section>
+  </div>
+
+  <div class="empty-state" id="empty-state" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5m0 14h16M8 15l3-4 3 3 5-7"/></svg>
+    <p><strong>No entries yet.</strong></p>
+    <p>Log a weight on the Log tab and your trend will show up here.</p>
+  </div>
+</main>
+
+<nav class="tabbar" aria-label="Sections">
+  <a href="index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    Log
+  </a>
+  <a href="chart.html" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5m0 14h16M8 15l3-4 3 3 5-7"/></svg>
+    Trend
+  </a>
+</nav>
+
+<script src="vendor/dexie.min.js"></script>
+<script src="vendor/chart.umd.min.js"></script>
+<script src="js/db.js"></script>
+<script src="js/install.js"></script>
+<script src="js/chart.js"></script>
+</body>
+</html>

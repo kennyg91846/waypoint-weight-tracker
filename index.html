@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#33604c">
+<title>Waypoint — Log</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="log-page">
+
+<header class="app-header">
+  <div class="app-header__top">
+    <div>
+      <h1 class="app-name">Waypoint</h1>
+      <p class="app-tagline">Your course, one day at a time</p>
+    </div>
+    <button type="button" class="install-btn" data-install-app hidden>Install App</button>
+  </div>
+  <svg class="horizon" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true">
+    <polyline points="0,28 30,24 55,30 80,14 110,20 140,8 170,18 200,12 230,24 260,16 290,26 320,10 350,20 380,15 400,22"
+      fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+</header>
+
+<main class="main-log">
+  <section class="today-card" aria-labelledby="today-label">
+    <p class="section-label" id="today-label">Today</p>
+    <p class="today-date" id="today-date-display"></p>
+    <div class="weight-input-row">
+      <input type="number" id="today-input" inputmode="decimal" step="0.1" placeholder="0.0" aria-label="Today's weight in pounds">
+      <span class="unit">lb</span>
+    </div>
+    <p class="save-hint" id="today-hint" aria-live="polite"></p>
+  </section>
+
+  <section class="card card-compact" aria-labelledby="progress-label" style="margin-top:14px;">
+    <div class="section-head">
+      <p class="section-label" id="progress-label">Progress snapshot</p>
+      <button type="button" class="panel-toggle" id="progress-toggle" aria-expanded="false" aria-controls="progress-panel">Show</button>
+    </div>
+    <div id="progress-panel" hidden>
+      <div class="stat-row stat-row--tight">
+        <div class="stat">
+          <div class="stat__label">Start</div>
+          <div class="stat__value" id="goal-stat-start">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Latest</div>
+          <div class="stat__value" id="goal-stat-latest">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Total change</div>
+          <div class="stat__value" id="goal-stat-change">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">To goal</div>
+          <div class="stat__value" id="goal-stat-to-goal">—</div>
+        </div>
+      </div>
+
+      <label class="field-label" for="goal-input">Goal weight (optional)</label>
+      <div class="inline-input-row">
+        <input type="number" id="goal-input" inputmode="decimal" step="0.1" placeholder="e.g. 185.0" aria-label="Goal weight in pounds">
+        <span class="unit">lb</span>
+      </div>
+      <p class="save-hint save-hint--card" id="goal-hint">Leave blank to track without a goal.</p>
+    </div>
+
+    <hr class="section-divider" aria-hidden="true">
+
+    <div class="section-head">
+      <p class="section-label" id="backup-label">Backup</p>
+      <button type="button" class="panel-toggle" id="backup-toggle" aria-expanded="false" aria-controls="backup-panel">Show</button>
+    </div>
+    <div id="backup-panel" hidden>
+      <div class="action-row">
+        <button type="button" class="action-btn" id="export-data-btn">Export data</button>
+        <button type="button" class="action-btn" id="import-data-btn">Import data</button>
+        <input type="file" id="import-data-file" accept="application/json" hidden>
+      </div>
+      <p class="save-hint save-hint--card">Optional: export/import your entries as JSON.</p>
+    </div>
+  </section>
+
+  <section class="card log-days-card" aria-labelledby="year-label" style="margin-top:14px;">
+    <div class="section-head section-head--year">
+      <p class="section-label" id="year-label"></p>
+      <label for="year-select" class="visually-hidden">Select year</label>
+      <select id="year-select" class="year-select" aria-label="Select log year"></select>
+    </div>
+    <ul class="day-list" id="day-list"></ul>
+  </section>
+</main>
+
+<nav class="tabbar" aria-label="Sections">
+  <a href="index.html" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    Log
+  </a>
+  <a href="chart.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5m0 14h16M8 15l3-4 3 3 5-7"/></svg>
+    Trend
+  </a>
+</nav>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="vendor/dexie.min.js"></script>
+<script src="js/db.js"></script>
+<script src="js/install.js"></script>
+<script src="js/log.js"></script>
+</body>
+</html>
