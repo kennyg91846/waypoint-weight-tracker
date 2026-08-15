@@ -23,8 +23,10 @@ let saveTimers = new Map();
 // reads from this instead of hitting IndexedDB per row.
 let entriesCache = new Map();
 const GOAL_STORAGE_KEY = 'waypointGoalWeight';
+const YEAR_STORAGE_KEY = 'waypointSelectedLogYear';
 const OUTLIER_LB_THRESHOLD = 8;
 let currentGoalWeight = null;
+let activeLogYear = new Date().getFullYear();
 
 // Briefly shows a status message (e.g. "Saved") in the toast element
 // at the bottom of the screen, auto-hiding after ~1.4s. Re-uses a
@@ -397,9 +399,116 @@ function buildWeekDivider(startDate) {
 function scrollToCurrentWeek(todayDate) {
   const todayWeekKey = toISODate(weekStart(todayDate));
   const weekAnchor = document.querySelector(`.week-divider__avg[data-week-key="${todayWeekKey}"]`);
-  if (!weekAnchor) return;
+  if (!weekAnchor) return false;
   const divider = weekAnchor.closest('.week-divider');
-  if (divider) divider.scrollIntoView({ block: 'start' });
+  if (!divider) return false;
+  divider.scrollIntoView({ block: 'start', behavior: 'auto' });
+  return true;
+}
+
+function getYearBoundsFromEntries() {
+  const currentYear = new Date().getFullYear();
+  let minYear = currentYear;
+  let maxYear = currentYear;
+
+  entriesCache.forEach((_, iso) => {
+    const year = Number(String(iso).slice(0, 4));
+    if (!Number.isInteger(year)) return;
+    if (year < minYear) minYear = year;
+    if (year > maxYear) maxYear = year;
+  });
+
+  return { minYear, maxYear };
+}
+
+function getSelectableYears() {
+  const { minYear, maxYear } = getYearBoundsFromEntries();
+  const years = [];
+  for (let year = maxYear; year >= minYear; year -= 1) {
+    years.push(year);
+  }
+  return years;
+}
+
+function renderYearLabel(year) {
+  const start = new Date(year, 0, 1);
+  const end = addDays(start, daysInYear(year) - 1);
+  document.getElementById('year-label').textContent =
+    `${formatShort(start)}, ${start.getFullYear()} – ${formatShort(end)}, ${end.getFullYear()}`;
+}
+
+async function renderLogYear(year, today, todayISOStr) {
+  const list = document.getElementById('day-list');
+  list.innerHTML = '';
+  renderYearLabel(year);
+
+  const start = new Date(year, 0, 1);
+  const days = daysFrom(start, daysInYear(year));
+  const frag = document.createDocumentFragment();
+  let lastWeekKey = null;
+
+  days.forEach(date => {
+    const wStart = weekStart(date);
+    const wKey = toISODate(wStart);
+    const isWeekStart = wKey !== lastWeekKey;
+    if (isWeekStart) {
+      frag.appendChild(buildWeekDivider(wStart));
+      lastWeekKey = wKey;
+    }
+    frag.appendChild(buildDayRow(date, todayISOStr, isWeekStart));
+  });
+
+  list.appendChild(frag);
+  await refreshWeekDeltas();
+
+  const alignListView = () => {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    if (year !== today.getFullYear()) {
+      list.scrollTop = 0;
+      return;
+    }
+
+    // Primary target is the week divider; fallback is today's row.
+    const didScroll = scrollToCurrentWeek(today);
+    if (!didScroll) {
+      const todayRow = document.getElementById(`day-${todayISOStr}`);
+      if (todayRow) todayRow.scrollIntoView({ block: 'start', behavior: 'auto' });
+    }
+  };
+
+  // Run after layout settles; some mobile/PWA launches override earlier scroll.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(alignListView);
+  });
+  setTimeout(alignListView, 120);
+}
+
+async function wireYearSelector(today, todayISOStr) {
+  const yearSelect = document.getElementById('year-select');
+  const years = getSelectableYears();
+  yearSelect.innerHTML = '';
+
+  years.forEach((year) => {
+    const option = document.createElement('option');
+    option.value = String(year);
+    option.textContent = String(year);
+    yearSelect.appendChild(option);
+  });
+
+  const savedYear = Number(localStorage.getItem(YEAR_STORAGE_KEY));
+  const defaultYear = years.includes(savedYear) ? savedYear : today.getFullYear();
+  activeLogYear = defaultYear;
+  yearSelect.value = String(activeLogYear);
+
+  yearSelect.addEventListener('change', async () => {
+    const selected = Number(yearSelect.value);
+    if (!Number.isInteger(selected)) return;
+    activeLogYear = selected;
+    localStorage.setItem(YEAR_STORAGE_KEY, String(activeLogYear));
+    await renderLogYear(activeLogYear, today, todayISOStr);
+  });
+
+  await renderLogYear(activeLogYear, today, todayISOStr);
 }
 
 // Re-fetches weekly summaries and updates every week-divider's average
@@ -458,12 +567,6 @@ async function init() {
   document.getElementById('today-date-display').textContent =
     `${formatWeekdayFull(today)}, ${formatShort(today)}, ${today.getFullYear()}`;
 
-  // Label showing the full date range covered by the log (start date
-  // through start date + 364 days = 365 days total).
-  const logEnd = addDays(LOG_START_DATE, 364);
-  document.getElementById('year-label').textContent =
-    `${formatShort(LOG_START_DATE)}, ${LOG_START_DATE.getFullYear()} – ${formatShort(logEnd)}, ${logEnd.getFullYear()}`;
-
   // "Today" quick-entry input: pre-filled if already logged, and kept
   // in sync with today's row further down in the list when edited.
   const todayInput = document.getElementById('today-input');
@@ -476,42 +579,14 @@ async function init() {
     updateDayTotalBadge(todayISOStr, todayInput.value);
   });
 
-  // Build the full day list off-DOM (via a DocumentFragment) for
-  // performance, then attach it in one go. A week divider is inserted
-  // whenever a day's week (its Sunday) differs from the previous day's,
-  // i.e. once per week, right before that week's first day row.
-  const list = document.getElementById('day-list');
-  const frag = document.createDocumentFragment();
-  const days = daysFrom(LOG_START_DATE, 365);
-  let lastWeekKey = null;
-
-  days.forEach(date => {
-    const wStart = weekStart(date);
-    const wKey = toISODate(wStart);
-    const isWeekStart = wKey !== lastWeekKey;
-    if (isWeekStart) {
-      frag.appendChild(buildWeekDivider(wStart));
-      lastWeekKey = wKey;
-    }
-    frag.appendChild(buildDayRow(date, todayISOStr, isWeekStart));
-  });
-
-  list.appendChild(frag);
+  await wireYearSelector(today, todayISOStr);
 
   // Fill in the week-divider averages/deltas and the "Today" hint now
   // that the rows exist in the DOM.
-  await refreshWeekDeltas();
   await updateTodayHint();
   wireCollapsiblePanels();
   wireOptionalControls();
   updateGoalSnapshot();
-
-  // Always land on the current week divider on open instead of the start
-  // of the 365-day list. Users can still scroll freely in both directions.
-  requestAnimationFrame(() => {
-    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-    scrollToCurrentWeek(today);
-  });
 }
 
 init();

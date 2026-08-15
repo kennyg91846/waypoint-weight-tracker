@@ -89,12 +89,17 @@ function formatWeekdayFull(d) {
   return WEEKDAY_LABELS[d.getDay()];
 }
 
-// The log intentionally starts on a fixed date (Aug 10, 2026) rather than
-// Jan 1 or the date the app happens to be opened, so the 365-day log
-// generated in log.js always begins on the same day regardless of when
-// someone installs/opens the app. Update this if the tracked year should
-// change.
-const LOG_START_DATE = new Date(2026, 7, 10); // August 10, 2026 (month is 0-indexed, so 7 = August)
+// Log window auto-rolls by calendar year: Jan 1 through Dec 31 of the
+// current year. No manual code changes are needed at year end.
+function daysInYear(year) {
+  const start = new Date(year, 0, 1);
+  const next = new Date(year + 1, 0, 1);
+  return Math.round((next - start) / 86400000);
+}
+
+const LOG_YEAR = new Date().getFullYear();
+const LOG_START_DATE = new Date(LOG_YEAR, 0, 1);
+const LOG_DAY_COUNT = daysInYear(LOG_YEAR);
 
 // Builds an array of `count` consecutive Date objects starting at `start`
 // (inclusive). This is what generates the full scrollable day list on the
