@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="log-page">
 
 <header class="app-header">
   <div class="app-header__top">
@@ -26,7 +26,7 @@
   </svg>
 </header>
 
-<main>
+<main class="main-log">
   <section class="today-card" aria-labelledby="today-label">
     <p class="section-label" id="today-label">Today</p>
     <p class="today-date" id="today-date-display"></p>
@@ -86,8 +86,12 @@
     </div>
   </section>
 
-  <section class="card" aria-labelledby="year-label" style="margin-top:14px;">
-    <p class="section-label" id="year-label"></p>
+  <section class="card log-days-card" aria-labelledby="year-label" style="margin-top:14px;">
+    <div class="section-head section-head--year">
+      <p class="section-label" id="year-label"></p>
+      <label for="year-select" class="visually-hidden">Select year</label>
+      <select id="year-select" class="year-select" aria-label="Select log year"></select>
+    </div>
     <ul class="day-list" id="day-list"></ul>
   </section>
 </main>
