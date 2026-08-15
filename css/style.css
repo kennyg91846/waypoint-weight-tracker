@@ -44,7 +44,8 @@ body {
 }
 
 body.log-page {
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -179,23 +180,16 @@ main {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
 }
 
 .log-days-card {
   display: flex;
   flex-direction: column;
-  flex: 1;
   min-height: 0;
-  overflow: hidden;
 }
 
 .log-days-card .day-list {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  margin-bottom: 0;
 }
 
 /* ---------- Cards ---------- */
