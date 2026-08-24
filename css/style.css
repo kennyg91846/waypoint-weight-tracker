@@ -267,11 +267,32 @@ main {
 /* ---------- Today entry ---------- */
 
 .today-card {
+  position: relative;
   background: var(--pine-deep);
   color: #f3f5ec;
   border-radius: var(--radius);
   padding: 20px;
   box-shadow: var(--shadow);
+}
+
+.jump-today-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 7px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f3f5ec;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 999px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.jump-today-btn:active {
+  background: rgba(255,255,255,0.22);
 }
 
 /* Keep the quick-entry card visible while browsing the day list. */
