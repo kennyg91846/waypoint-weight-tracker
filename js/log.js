@@ -503,6 +503,38 @@ async function renderLogYear(year, today, todayISOStr) {
   setTimeout(alignListView, 120);
 }
 
+// Jumps the day list straight to today's row, switching the visible
+// year first if the user had navigated to a different year. Used by
+// the "Jump to today" button on the Today card.
+async function jumpToToday() {
+  const today = new Date();
+  const todayISOStr = toISODate(today);
+
+  if (activeLogYear !== today.getFullYear()) {
+    activeLogYear = today.getFullYear();
+    localStorage.setItem(YEAR_STORAGE_KEY, String(activeLogYear));
+    const yearSelect = document.getElementById('year-select');
+    if (yearSelect) yearSelect.value = String(activeLogYear);
+    // renderLogYear already scrolls to the current week/day once the
+    // matching year is rendered.
+    await renderLogYear(activeLogYear, today, todayISOStr);
+    return;
+  }
+
+  const didScroll = scrollToCurrentWeek(today);
+  if (!didScroll) {
+    const todayRow = document.getElementById(`day-${todayISOStr}`);
+    if (todayRow) {
+      const todayCard = document.querySelector('.today-card');
+      const stickyOffset = todayCard
+        ? todayCard.getBoundingClientRect().height + 24
+        : 16;
+      const targetY = window.scrollY + todayRow.getBoundingClientRect().top - stickyOffset;
+      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+    }
+  }
+}
+
 async function wireYearSelector(today, todayISOStr) {
   const yearSelect = document.getElementById('year-select');
   const years = getSelectableYears();
@@ -603,6 +635,9 @@ async function init() {
   todayInput.addEventListener('blur', () => {
     scheduleSave(todayISOStr, todayInput.value, { confirmOutlier: true, delayMs: 0 });
   });
+
+  const jumpTodayBtn = document.getElementById('jump-today-btn');
+  if (jumpTodayBtn) jumpTodayBtn.addEventListener('click', jumpToToday);
 
   await wireYearSelector(today, todayISOStr);
 
